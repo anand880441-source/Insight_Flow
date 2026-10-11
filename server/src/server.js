@@ -3,7 +3,7 @@ const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
 const mongoose = require('mongoose');
-const connectDB = require('./config/db');
+const { connectDB, getLastMongoError } = require('./config/db');
 const feedbackRoutes = require('./routes/feedback.routes');
 const aiRoutes = require('./routes/ai.routes');
 const analyticsRoutes = require('./routes/analytics.routes');
@@ -42,10 +42,15 @@ app.use(morgan('dev'));
 
 app.get('/api/health', (req, res) => {
   const state = mongoose.connection.readyState;
+  if (state !== 1 && state !== 2) {
+    connectDB().catch(() => {});
+  }
   res.json({
     status: 'ok',
     ts: Date.now(),
     db: state === 1 ? 'connected' : state === 2 ? 'connecting' : 'disconnected',
+    hasMongoUri: Boolean(process.env.MONGO_URI),
+    mongoError: getLastMongoError(),
   });
 });
 
