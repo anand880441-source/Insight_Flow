@@ -1,4 +1,4 @@
-﻿require('dotenv').config();
+require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const morgan = require('morgan');
@@ -11,14 +11,24 @@ const { errorHandler, notFound } = require('./middleware/errorHandler');
 
 const app = express();
 
-const allowedOrigins = (process.env.CORS_ORIGIN || '*')
+const rawOrigins = process.env.CORS_ORIGIN || '*';
+const allowedOrigins = rawOrigins
   .split(',')
-  .map(s => s.trim())
+  .map(s => s.trim().replace(/\/+$/, ''))
   .filter(Boolean);
 
 app.use(cors({
   origin: (origin, cb) => {
-    if (!origin || allowedOrigins.includes('*') || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes('*')) {
+      return cb(null, true);
+    }
+    const cleanOrigin = origin.replace(/\/+$/, '');
+    const isAllowed = allowedOrigins.some(ao => {
+      if (ao === cleanOrigin) return true;
+      if (ao.includes('vercel.app') && cleanOrigin.endsWith('.vercel.app')) return true;
+      return false;
+    });
+    if (isAllowed) {
       return cb(null, true);
     }
     return cb(new Error('Not allowed by CORS: ' + origin));
