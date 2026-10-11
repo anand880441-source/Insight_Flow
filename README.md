@@ -177,6 +177,58 @@ Visit [http://localhost:5173](http://localhost:5173) in your browser.
 
 ---
 
+## 🚀 Production Deployment Guide
+
+InsightFlow is pre-configured for seamless cloud deployment: **Server on Render** and **Client on Vercel**.
+
+### Step 1: Deploy Backend to Render
+
+#### Option A: Automatic via Render Blueprint (Recommended)
+1. Go to [Render Dashboard](https://dashboard.render.com/) and click **New +** > **Blueprint**.
+2. Connect your GitHub repository: `https://github.com/anand880441-source/Insight_Flow`.
+3. Render will automatically detect the included [`render.yaml`](render.yaml).
+4. Provide your secret environment variables when prompted:
+   - `MONGO_URI`: Your MongoDB Atlas connection string.
+   - `GEMINI_API_KEY`: Your Google Gemini API Key.
+5. Click **Apply**. Render will build and deploy the API.
+6. Copy your public service URL (e.g., `https://insightflow-api.onrender.com`).
+
+#### Option B: Manual Web Service
+- **Environment**: `Node`
+- **Root Directory**: `server`
+- **Build Command**: `npm install`
+- **Start Command**: `npm start`
+- **Health Check Path**: `/api/health`
+- **Environment Variables**:
+  ```env
+  NODE_ENV=production
+  PORT=10000
+  CORS_ORIGIN=*
+  AI_MODEL=gemini-2.5-flash
+  AI_BATCH_SIZE=25
+  MONGO_URI=your_mongodb_connection_string
+  GEMINI_API_KEY=your_gemini_api_key
+  ```
+
+---
+
+### Step 2: Deploy Frontend to Vercel
+
+1. Go to [Vercel Dashboard](https://vercel.com/) and click **Add New...** > **Project**.
+2. Import the GitHub repository: `https://github.com/anand880441-source/Insight_Flow`.
+3. In **Project Configuration**:
+   - **Framework Preset**: `Vite`
+   - **Root Directory**: Select `client` (or leave default root, both are pre-configured).
+4. In **Environment Variables**, add:
+   ```env
+   VITE_API_URL=https://<your-render-backend-url>.onrender.com
+   ```
+   *(Replace with the actual URL from Step 1)*
+5. Click **Deploy**. Vercel will build and serve the client with full SPA routing support.
+6. *(Optional)* In your Render backend settings, update `CORS_ORIGIN` to your new Vercel domain (e.g., `https://insightflow.vercel.app`) for tighter security.
+
+---
+
 ## 🛡️ Security & Resiliency
 
 - **Graceful Degradation**: If Google Gemini API quota is reached or network connectivity drops, the system seamlessly transitions to an internal rule-based NLP engine without user-facing errors.
