@@ -1,11 +1,32 @@
-﻿const styles = {
-  positive: 'bg-emerald-50 text-emerald-700 border border-emerald-200',
-  neutral:  'bg-slate-100 text-slate-600 border border-slate-200',
-  negative: 'bg-rose-50 text-rose-700 border border-rose-200',
-  pending:  'bg-amber-50 text-amber-700 border border-amber-200',
+const configs = {
+  positive: {
+    cls: 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20',
+    dot: 'bg-emerald-400',
+    label: 'Positive',
+  },
+  neutral: {
+    cls: 'bg-slate-500/10 text-slate-400 border border-slate-500/20',
+    dot: 'bg-slate-400',
+    label: 'Neutral',
+  },
+  negative: {
+    cls: 'bg-rose-500/10 text-rose-400 border border-rose-500/20',
+    dot: 'bg-rose-400',
+    label: 'Negative',
+  },
+  pending: {
+    cls: 'bg-amber-500/10 text-amber-400 border border-amber-500/20',
+    dot: 'bg-amber-400',
+    label: 'Pending',
+  },
 };
 
 export default function SentimentBadge({ value }) {
-  const cls = styles[value] || styles.neutral;
-  return <span className={`badge ${cls}`}>{value || 'unknown'}</span>;
+  const cfg = configs[value] || configs.neutral;
+  return (
+    <span className={`badge ${cfg.cls} gap-1.5`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot}`} />
+      {cfg.label}
+    </span>
+  );
 }
