@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { listFeedbackByIds } from '../services/api';
 import SentimentBadge from './SentimentBadge';
 import StatusBadge from './StatusBadge';
@@ -22,84 +22,149 @@ export default function IssueDrawer({ issue, onClose, onChangeStatus }) {
   if (!issue) return null;
 
   return (
-    <div className="fixed inset-0 z-40 flex" onClick={onClose}>
-      <div className="flex-1 bg-black/30" />
+    <div className="fixed inset-0 z-50 flex animate-fade-in" onClick={onClose}>
+      <div className="flex-1 bg-black/70 backdrop-blur-sm transition-opacity" />
       <div
-        className="w-[520px] max-w-full bg-white border-l border-slate-200 h-full overflow-y-auto"
+        className="w-[560px] max-w-full bg-surface-900 border-l border-white/[0.08] h-full overflow-y-auto shadow-elevated flex flex-col animate-slide-right"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="sticky top-0 bg-white border-b border-slate-200 px-5 py-4 flex items-center justify-between">
+        {/* Sticky Header */}
+        <div className="sticky top-0 bg-surface-900/95 backdrop-blur-md border-b border-white/[0.08] px-6 py-4 flex items-center justify-between z-10">
           <div>
-            <div className="text-xs text-slate-500">Issue</div>
-            <div className="text-lg font-semibold">{issue.title}</div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-brand-400 bg-brand-500/10 px-2 py-0.5 rounded border border-brand-500/20">
+                Clustered Issue
+              </span>
+              <StatusBadge value={issue.status} />
+            </div>
+            <h2 className="text-lg font-bold font-display text-slate-100">{issue.title}</h2>
           </div>
-          <button className="btn-ghost" onClick={onClose}>Close</button>
+          <button
+            className="w-8 h-8 rounded-lg flex items-center justify-center text-slate-400 hover:text-slate-100 hover:bg-white/[0.06] transition-colors"
+            onClick={onClose}
+            aria-label="Close drawer"
+          >
+            ✕
+          </button>
         </div>
 
-        <div className="p-5 space-y-5">
-          {/* Meta */}
+        {/* Content Body */}
+        <div className="p-6 space-y-6 flex-1">
+          {/* Metadata Grid */}
           <div className="grid grid-cols-3 gap-3">
-            <Meta label="Severity" value={issue.severity + ' / 5'} />
-            <Meta label="Priority" value={issue.priorityScore} />
-            <Meta label="Frequency" value={issue.frequency} />
+            <Meta
+              label="Severity"
+              value={`${issue.severity} / 5`}
+              tone={issue.severity >= 4 ? 'text-rose-400' : 'text-slate-200'}
+            />
+            <Meta label="Priority Score" value={issue.priorityScore} tone="text-brand-300 font-mono" />
+            <Meta label="Frequency" value={`${issue.frequency} reports`} tone="text-slate-200" />
           </div>
 
-          {/* Status + transitions */}
-          <div>
-            <div className="text-xs text-slate-500 mb-2">Status</div>
-            <div className="flex items-center gap-2">
-              <StatusBadge value={issue.status} />
-              {['open', 'in-progress', 'resolved']
-                .filter(s => s !== issue.status)
-                .map(s => (
+          {/* Status Controls */}
+          <div className="rounded-xl bg-surface-850 p-4 border border-white/[0.06]">
+            <div className="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2.5">
+              Lifecycle Status
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              {['open', 'in-progress', 'resolved'].map(s => {
+                const isActive = s === issue.status;
+                return (
                   <button
                     key={s}
-                    className="btn-ghost"
+                    className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${
+                      isActive
+                        ? 'bg-brand-600 text-white shadow-glow-sm font-semibold'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-white/[0.06] border border-white/[0.06]'
+                    }`}
                     onClick={() => onChangeStatus(issue._id, s)}
+                    disabled={isActive}
                   >
-                    → {s}
+                    {isActive ? `Current: ${s}` : `Move to ${s}`}
                   </button>
-                ))}
+                );
+              })}
             </div>
           </div>
 
-          {/* Why + recommendation */}
-          {issue.why && (
-            <Section title="Why this matters">
-              <p className="text-sm text-slate-700">{issue.why}</p>
+          {/* Description */}
+          {issue.description && (
+            <Section title="Issue Synopsis">
+              <p className="text-sm text-slate-300 leading-relaxed bg-surface-850 p-4 rounded-xl border border-white/[0.06]">
+                {issue.description}
+              </p>
             </Section>
           )}
+
+          {/* Why this matters */}
+          {issue.why && (
+            <Section title="Business Impact & Significance">
+              <div className="text-sm text-slate-300 leading-relaxed bg-surface-850 p-4 rounded-xl border border-white/[0.06]">
+                {issue.why}
+              </div>
+            </Section>
+          )}
+
+          {/* Recommendation */}
           {issue.recommendation && (
-            <Section title="Recommended action">
-              <p className="text-sm text-slate-700">{issue.recommendation}</p>
+            <Section title="AI Recommended Mitigation">
+              <div className="text-sm text-slate-200 leading-relaxed bg-brand-500/[0.07] border border-brand-500/20 p-4 rounded-xl">
+                <div className="flex items-center gap-1.5 text-xs font-semibold text-brand-300 mb-1">
+                  <svg className="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
+                    <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" />
+                  </svg>
+                  Proposed Solution
+                </div>
+                {issue.recommendation}
+              </div>
             </Section>
           )}
 
           {/* Keywords */}
           {issue.keywords?.length > 0 && (
-            <Section title="Keywords">
-              <div className="flex flex-wrap gap-1">
+            <Section title="Extracted Keywords">
+              <div className="flex flex-wrap gap-1.5">
                 {issue.keywords.map(k => (
-                  <span key={k} className="badge bg-slate-100 text-slate-600">{k}</span>
+                  <span
+                    key={k}
+                    className="inline-block text-xs font-mono text-slate-300 bg-white/[0.04] px-2.5 py-1 rounded-md border border-white/[0.06]"
+                  >
+                    #{k}
+                  </span>
                 ))}
               </div>
             </Section>
           )}
 
           {/* Related feedback */}
-          <Section title={`Related feedback (${feedback.length})`}>
-            {loading && <div className="text-sm text-slate-400">Loading…</div>}
-            {!loading && feedback.length === 0 && (
-              <div className="text-sm text-slate-400">No related feedback attached.</div>
+          <Section title={`Related Customer Feedback (${feedback.length})`}>
+            {loading && (
+              <div className="p-4 text-center text-sm text-slate-500">
+                <div className="inline-flex items-center gap-2">
+                  <svg className="w-4 h-4 animate-spin text-brand-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 12a9 9 0 1 1-6.219-8.56" />
+                  </svg>
+                  <span>Loading linked customer feedback…</span>
+                </div>
+              </div>
             )}
-            <ul className="space-y-2">
+            {!loading && feedback.length === 0 && (
+              <div className="text-sm text-slate-500 bg-surface-850 p-4 rounded-xl border border-white/[0.06]">
+                No specific raw customer feedback items linked.
+              </div>
+            )}
+            <ul className="space-y-2.5">
               {feedback.map(f => (
-                <li key={f._id} className="border border-slate-200 rounded-lg p-3">
-                  <div className="flex items-center gap-2 mb-1">
+                <li key={f._id} className="bg-surface-850 border border-white/[0.06] rounded-xl p-3.5">
+                  <div className="flex items-center gap-2 mb-2">
                     <SentimentBadge value={f.sentiment} />
-                    <span className="badge bg-slate-100 text-slate-600">{f.category}</span>
+                    <span className="text-[11px] font-medium text-slate-300 bg-surface-700/60 px-2 py-0.5 rounded border border-white/[0.06]">
+                      {f.category}
+                    </span>
                   </div>
-                  <div className="text-sm text-slate-700">{f.text}</div>
+                  <div className="text-xs sm:text-sm text-slate-300 leading-relaxed italic">
+                    "{f.text}"
+                  </div>
                 </li>
               ))}
             </ul>
@@ -110,11 +175,11 @@ export default function IssueDrawer({ issue, onClose, onChangeStatus }) {
   );
 }
 
-function Meta({ label, value }) {
+function Meta({ label, value, tone = 'text-slate-200' }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-3">
-      <div className="text-xs text-slate-500">{label}</div>
-      <div className="text-lg font-semibold">{value}</div>
+    <div className="rounded-xl bg-surface-850 border border-white/[0.06] p-3.5">
+      <div className="text-[10px] uppercase tracking-wider text-slate-500 font-medium">{label}</div>
+      <div className={`text-base font-bold font-display mt-0.5 ${tone}`}>{value}</div>
     </div>
   );
 }
@@ -122,7 +187,7 @@ function Meta({ label, value }) {
 function Section({ title, children }) {
   return (
     <div>
-      <div className="text-xs uppercase tracking-wide text-slate-500 mb-2">{title}</div>
+      <div className="text-xs uppercase tracking-wider font-semibold text-slate-400 mb-2.5">{title}</div>
       {children}
     </div>
   );
